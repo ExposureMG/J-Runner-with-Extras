@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Media;
@@ -33,6 +33,65 @@ namespace JRunner
 
         [DllImport(@"common\xflasher\xFlasher.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern int emmcGetBlocks();
+
+        // libnandpromax (FTDI over Wine/Native)
+        public enum FtdiPageFormatC
+        {
+            Auto = 0,
+            Small = 1,
+            Big = 2
+        }
+
+        [DllImport(@"common\drivers\libnandpromax.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern int ftdi_read_nand_c(
+            string outPath,
+            uint start,
+            uint count,
+            bool countHasVal,
+            FtdiPageFormatC pageFormat,
+            string ftdiDesc,
+            int ftdiIndex,
+            bool ftdiIndexHasVal,
+            uint freqHz,
+            out double elapsedSecsOut);
+
+        [DllImport(@"common\drivers\libnandpromax.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        public static extern int ftdi_write_nand_c(
+            string inputPath,
+            uint start,
+            uint count,
+            bool countHasVal,
+            FtdiPageFormatC pageFormat,
+            string ftdiDesc,
+            int ftdiIndex,
+            bool ftdiIndexHasVal,
+            uint freqHz,
+            bool erase,
+            bool verify,
+            out double elapsedSecsOut);
+
+        private static int spi_read_nand_wrapper(string file, uint startPage = 0, uint countPages = 0, bool countHasVal = false, FtdiPageFormatC format = FtdiPageFormatC.Auto)
+        {
+            if (WineMethods.IsWine())
+            {
+                double elapsed = 0;
+                return ftdi_read_nand_c(file, startPage, countPages, countHasVal, format, "auto", 0, false, 3000000, out elapsed);
+            }
+            return spi(1, 16, file, (int)startPage, countHasVal ? (int)countPages : 0);
+        }
+
+        private static int spi_write_nand_wrapper(string file, uint startPage = 0, uint countPages = 0, bool countHasVal = false, FtdiPageFormatC format = FtdiPageFormatC.Auto, bool erase = false, bool verify = false)
+        {
+            if (WineMethods.IsWine())
+            {
+                double elapsed = 0;
+                return ftdi_write_nand_c(file, startPage, countPages, countHasVal, format, "auto", 0, false, 3000000, erase, verify, out elapsed);
+            }
+            int mode = erase ? 4 : 3;
+            return spi(mode, 16, file, (int)startPage, countHasVal ? (int)countPages : 0);
+        }
+
+
 
 
         public bool ready = false;
