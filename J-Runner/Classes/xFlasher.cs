@@ -454,7 +454,7 @@ namespace JRunner
                             inUse = true;
                             blocksThread.Start();
 
-                            result = spi(1, size, variables.filename);
+                            result = spi_read_nand_wrapper(variables.filename, 0, (uint)(size * 64), true);
                         }
                         else
                         {
@@ -602,7 +602,7 @@ namespace JRunner
                     inUse = true;
                     blocksThread.Start();
 
-                    int result = spi(1, size, filename, startblock, length);
+                    result = spi_read_nand_wrapper(filename, (uint)startblock, (uint)(length > 0 ? length : size * 64), length > 0 || size > 0);
 
                     inUseTimer.Enabled = false;
                     inUseCount = 0;
@@ -875,7 +875,7 @@ namespace JRunner
                     int result;
                     if (filename == "erase")
                     {
-                        result = spi(5, size, "erase", startblock, length);
+                        result = spi_write_nand_wrapper("erase", (uint)startblock, (uint)(length > 0 ? length : size * 64), length > 0 || size > 0, FtdiPageFormatC.Auto, true, false);
                     }
                     else if ((mode == 3) || (mode == 4))
                     {
@@ -883,12 +883,13 @@ namespace JRunner
                     }
                     else if (mode == 1)
                     {
-                        result = spi(4, size, filename, startblock, length);
+                        result = spi_write_nand_wrapper(filename, (uint)startblock, (uint)(length > 0 ? length : size * 64), length > 0 || size > 0, FtdiPageFormatC.Auto, true, false);
                     }
                     else
                     {
-                        result = spi(3, size, filename, startblock, length);
+                        result = spi_write_nand_wrapper(filename, (uint)startblock, (uint)(length > 0 ? length : size * 64), length > 0 || size > 0, FtdiPageFormatC.Auto, false, false);
                     }
+
 
                     inUseTimer.Enabled = false;
                     inUseCount = 0;
