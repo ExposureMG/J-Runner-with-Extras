@@ -602,7 +602,7 @@ namespace JRunner
                     inUse = true;
                     blocksThread.Start();
 
-                    result = spi_read_nand_wrapper(filename, (uint)startblock, (uint)(length > 0 ? length : size * 64), length > 0 || size > 0);
+                    int result = spi_read_nand_wrapper(filename, (uint)startblock, (uint)(length > 0 ? length : size * 64), length > 0 || size > 0);
 
                     inUseTimer.Enabled = false;
                     inUseCount = 0;
